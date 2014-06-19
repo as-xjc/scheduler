@@ -26,6 +26,7 @@ scheduler::scheduler()
 
 scheduler::~scheduler()
 {
+	clear();
 }
 
 void scheduler::init(uv_loop_t* loop)
@@ -33,6 +34,16 @@ void scheduler::init(uv_loop_t* loop)
 	if (loop != nullptr) {
 		_loop = loop;
 	}
+}
+
+void scheduler::clear()
+{
+	for (auto& it : _schedules) {
+		auto& tmp = it.second;
+		uv_timer_stop(&(tmp->timer));
+	}
+
+	_schedules.clear();
 }
 
 schedule_id scheduler::_schedule(uint64_t timeout, uint64_t repeat, schedule_cb& cb)

@@ -36,6 +36,7 @@ public:
 	~scheduler();
 	void init(uv_loop_t* loop);
 
+	void clear();
 	void unschedule(schedule_id id);
 
 	schedule_id run_at(uint64_t target_time, schedule_cb cb, bool use_millisecond = false);
