@@ -76,6 +76,31 @@ schedule_id scheduler::run_at(uint64_t target_time, schedule_cb cb, bool use_mil
 	return _schedule(timeout, 0, cb);
 }
 
+schedule_id scheduler::run_every_minute(uint64_t timeout, schedule_cb cb, bool use_millisecond)
+{
+	std::time_t now = std::time(nullptr);
+	struct tm now_mt = *std::localtime(&now);
+	uint64_t now_second = now_mt.tm_sec;
+
+	uint64_t needTimeout = 0;
+	if (use_millisecond) {
+		now_second *= one_second;
+		if (now_second <= timeout) {
+			needTimeout = timeout - now_second;
+		} else {
+			needTimeout = one_minute - now_second - timeout;
+		}
+	} else {
+		if (now_second <= timeout) {
+			needTimeout = (timeout-now_second)*one_second;
+		} else {
+			needTimeout = one_minute - (now_second-timeout)*one_second;
+		}
+	}
+
+	return _schedule(needTimeout, one_minute, cb);
+}
+
 schedule_id scheduler::heartbeat(uint64_t repeat, schedule_cb cb, bool start_now, bool use_millisecond)
 {
 	if (repeat <= 0) return 0;

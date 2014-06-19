@@ -39,6 +39,7 @@ public:
 	void unschedule(schedule_id id);
 
 	schedule_id run_at(uint64_t target_time, schedule_cb cb, bool use_millisecond = false);
+	schedule_id run_every_minute(uint64_t timeout, schedule_cb cb, bool use_millisecond = false);
 	schedule_id heartbeat(uint64_t repeat, schedule_cb cb, bool start_now = false, bool use_millisecond  = false);
 
 private:
