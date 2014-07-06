@@ -21,7 +21,6 @@ void schedule_callback(uv_timer_t* handle, int status)
 
 scheduler::scheduler()
 {
-	_id = 1;
 }
 
 scheduler::~scheduler()

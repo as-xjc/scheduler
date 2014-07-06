@@ -22,11 +22,11 @@ class scheduler;
 enum class schedule_type {repeat, run_one};
 typedef struct 
 {
-	schedule_id id;
+	schedule_id id = 0;
 	schedule_type type;
 	uv_timer_t timer;
 	schedule_cb callback;
-	scheduler* base;
+	scheduler* base = nullptr;
 }schedule_t;
 
 class scheduler 
@@ -45,8 +45,8 @@ public:
 
 private:
 	schedule_id _schedule(uint64_t timeout, uint64_t repeat, schedule_cb& cb);
-	uv_loop_t* _loop;
-	schedule_id _id;
+	uv_loop_t* _loop = nullptr;
+	schedule_id _id = 1;
 	std::map<schedule_id, std::shared_ptr<schedule_t>> _schedules;
 };
 
