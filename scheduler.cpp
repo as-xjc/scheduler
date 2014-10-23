@@ -1,5 +1,5 @@
-#include <ctime>
 #include "scheduler.hpp"
+#include "util.hpp"
 
 namespace schedule
 {
@@ -7,7 +7,7 @@ namespace schedule
 namespace 
 {
 
-void schedule_callback(uv_timer_t* handle, int status)
+void schedule_callback(uv_timer_t* handle)
 {
 	schedule_t* tmp = reinterpret_cast<schedule_t*>(handle->data);
 	tmp->callback();
@@ -50,7 +50,7 @@ schedule_id scheduler::_schedule(uint64_t timeout, uint64_t repeat, schedule_cb&
 	auto tmp = std::make_shared<schedule_t>();
 	tmp->callback = cb;
 	tmp->base = this;
-	if (repeat) {
+	if (repeat > 0) {
 		tmp->type = schedule_type::repeat;
 	} else {
 		tmp->type = schedule_type::run_one;
@@ -69,63 +69,50 @@ schedule_id scheduler::_schedule(uint64_t timeout, uint64_t repeat, schedule_cb&
 	return newid;
 }
 
-schedule_id scheduler::run_at(uint64_t target_time, schedule_cb cb, bool use_millisecond)
+schedule_id scheduler::run_at(uint64_t target_time, schedule_cb cb)
 {
-	std::time_t now = std::time(nullptr);
-	uint64_t timeout = 0;
-	if (use_millisecond) {
-		uint64_t _now = now*one_second;
-		if (target_time <= _now) return 0;
+        uint64_t now_time = schedule::util::now_time();
 
-		timeout = target_time - _now;
-	} else {
-		if (target_time <= static_cast<uint64_t>(now)) return 0;
-		timeout = (target_time-now)*one_second;
-	}
-
-	return _schedule(timeout, 0, cb);
+	if (target_time < now_time) return 0;
+	return _schedule(target_time - now_time, 0, cb);
 }
 
-schedule_id scheduler::run_every_minute(uint64_t timeout, schedule_cb cb, bool use_millisecond)
+schedule_id scheduler::run_every_minute(uint64_t timeout, schedule_cb cb)
 {
-	std::time_t now = std::time(nullptr);
-	struct tm now_mt = *std::localtime(&now);
-	uint64_t now_second = now_mt.tm_sec;
-
+	timeout = timeout % schedule::minute;
+	uint64_t now_second = schedule::util::now_time() % schedule::minute;
 	uint64_t needTimeout = 0;
-	if (use_millisecond) {
-		now_second *= one_second;
-		if (now_second <= timeout) {
-			needTimeout = timeout - now_second;
-		} else {
-			needTimeout = one_minute - now_second - timeout;
-		}
+	if (timeout <= now_second) {
+		needTimeout = schedule::minute - now_second + timeout;
 	} else {
-		if (now_second <= timeout) {
-			needTimeout = (timeout-now_second)*one_second;
-		} else {
-			needTimeout = one_minute - (now_second-timeout)*one_second;
-		}
+		needTimeout = timeout - now_second;
 	}
 
-	return _schedule(needTimeout, one_minute, cb);
+	return _schedule(needTimeout, minute, cb);
 }
 
-schedule_id scheduler::heartbeat(uint64_t repeat, schedule_cb cb, bool start_now, bool use_millisecond)
+schedule_id scheduler::run_every_hour(uint64_t timeout, schedule_cb cb)
 {
-	if (repeat <= 0) return 0;
-
-	uint64_t heartbeat = 0;
-	if (use_millisecond) {
-		heartbeat = repeat;
+	timeout = timeout % schedule::hour;
+	uint64_t now_second = schedule::util::now_time() % schedule::hour;
+	uint64_t needTimeout = 0;
+	if (timeout <= now_second) {
+		needTimeout = schedule::hour - now_second + timeout;
 	} else {
-		heartbeat = repeat*one_second;
+		needTimeout = timeout - now_second;
 	}
 
-	uint64_t timeout = 0;
-	if (!start_now) timeout = heartbeat;
+	return _schedule(needTimeout, minute, cb);
+}
 
-	return _schedule(timeout, heartbeat, cb);
+schedule_id scheduler::heartbeat(uint64_t repeat, schedule_cb cb, bool immediately)
+{
+	if (repeat < 1) return 0;
+
+	uint64_t timeout = 0;
+	if (!immediately) timeout = repeat;
+
+	return _schedule(timeout, repeat, cb);
 }
 
 void scheduler::unschedule(schedule_id id)

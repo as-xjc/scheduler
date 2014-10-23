@@ -2,20 +2,12 @@
 #define __SCHDULE_SCHDULER__
 
 #include <map>
-#include <functional>
 #include <memory>
-#include "uv.h"
+#include <uv.h>
+#include "define.hpp"
 
 namespace schedule
 {
-
-const static uint64_t one_second = 1000;
-const static uint64_t one_minute = one_second*60;
-const static uint64_t one_hour = one_minute*60;
-const static uint64_t one_day = one_hour*24;
-
-typedef uint64_t schedule_id;
-typedef std::function<void()> schedule_cb;
 
 class scheduler;
 
@@ -39,9 +31,10 @@ public:
 	void clear();
 	void unschedule(schedule_id id);
 
-	schedule_id run_at(uint64_t target_time, schedule_cb cb, bool use_millisecond = false);
-	schedule_id run_every_minute(uint64_t timeout, schedule_cb cb, bool use_millisecond = false);
-	schedule_id heartbeat(uint64_t repeat, schedule_cb cb, bool start_now = false, bool use_millisecond  = false);
+	schedule_id run_at(uint64_t target_time, schedule_cb cb);
+	schedule_id run_every_minute(uint64_t timeout, schedule_cb cb);
+	schedule_id run_every_hour(uint64_t timeout, schedule_cb cb);
+	schedule_id heartbeat(uint64_t repeat, schedule_cb cb, bool immediately = false);
 
 private:
 	schedule_id _schedule(uint64_t timeout, uint64_t repeat, schedule_cb& cb);
