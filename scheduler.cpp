@@ -88,7 +88,7 @@ schedule_id scheduler::run_every_minute(uint64_t timeout, schedule_cb cb)
 		needTimeout = timeout - now_second;
 	}
 
-	return _schedule(needTimeout, minute, cb);
+	return _schedule(needTimeout, schedule::minute, cb);
 }
 
 schedule_id scheduler::run_every_hour(uint64_t timeout, schedule_cb cb)
@@ -102,7 +102,21 @@ schedule_id scheduler::run_every_hour(uint64_t timeout, schedule_cb cb)
 		needTimeout = timeout - now_second;
 	}
 
-	return _schedule(needTimeout, minute, cb);
+	return _schedule(needTimeout, schedule::hour, cb);
+}
+
+schedule_id scheduler::run_every_day(uint64_t timeout, schedule_cb cb)
+{
+	timeout = timeout % schedule::day;
+	uint64_t now_second = schedule::util::now_time() % schedule::day;
+	uint64_t needTimeout = 0;
+	if (timeout <= now_second) {
+		needTimeout = schedule::day - now_second + timeout;
+	} else {
+		needTimeout = timeout - now_second;
+	}
+
+	return _schedule(needTimeout, schedule::day, cb);
 }
 
 schedule_id scheduler::heartbeat(uint64_t repeat, schedule_cb cb, bool immediately)
