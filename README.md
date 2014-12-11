@@ -12,15 +12,13 @@ all api in [scheduler.hpp](https://github.com/as-xjc/scheduler/blob/master/sched
 #include <ctime>
 
 #include "scheduler.hpp"
-#include "util.hpp"
 
 int main(int argc, char* argv[])
 {
         uv_loop_t* loop = new uv_loop_t;
         uv_loop_init(loop);
 
-        schedule::scheduler s;
-        s.init(loop);
+        schedule::scheduler s(loop);
 
 	// every minutes 5 second to run
         s.run_every_minute(5*schedule::second, [](){

@@ -19,20 +19,14 @@ void schedule_callback(uv_timer_t* handle)
 
 }
 
-scheduler::scheduler()
+scheduler::scheduler(uv_loop_t* loop):
+	_loop(loop)
 {
 }
 
 scheduler::~scheduler()
 {
 	clear();
-}
-
-void scheduler::init(uv_loop_t* loop)
-{
-	if (loop != nullptr) {
-		_loop = loop;
-	}
 }
 
 void scheduler::clear()
